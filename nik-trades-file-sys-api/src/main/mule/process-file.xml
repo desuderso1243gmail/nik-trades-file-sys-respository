@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	
+	<sub-flow name="process-file-subflow" doc:id="4b6f2d50-7397-49a2-adb1-9955f8be407a" >
+		<logger level="INFO" doc:name="start" doc:id="60096ca6-5619-4dd6-9d63-52fcb45f71f9" message="request received"/>
+		<choice doc:name="Choice" doc:id="f94202c2-d812-497b-af11-fbc00ac25733" >
+			<when expression='#[payload."type"=="equity"]'>
+				<logger level="INFO" doc:name="equity trade" doc:id="54d33dc1-5a82-4396-a1a3-df242e49f8cf" message="equity trade"/>
+				<ee:transform doc:name="set vars" doc:id="48f776dd-507a-4bd9-9835-e692ff756596">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="filePath" ><![CDATA[%dw 2.0
+output application/json
+---
+p("filePath.equity")]]></ee:set-variable>
+						<ee:set-variable variableName="fileName" ><![CDATA[%dw 2.0
+output application/json
+---
+"equity_trade_"]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<flow-ref doc:name="file-write-sub-flow" doc:id="3eb3b7f3-0f69-4374-a502-a48e48af2fbd" name="file-write-sub-flow"/>
+			</when>
+			<when expression='#[payload."type"=="fx"]'>
+				<logger level="INFO" doc:name="fx trade" doc:id="1795daf9-b89d-4c0d-9981-368e9e1f3372" message="fx trade"/>
+				<ee:transform doc:name="set vars" doc:id="f2e4022c-9dce-4283-9b69-4cda9b74c120">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="filePath" ><![CDATA[%dw 2.0
+output application/json
+---
+p("filePath.fx")]]></ee:set-variable>
+						<ee:set-variable variableName="fileName" ><![CDATA[%dw 2.0
+output application/json
+---
+"fx_trade_"]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<flow-ref doc:name="file-write-sub-flow" doc:id="84909fce-0610-42f8-bd37-825907a44c4d" name="file-write-sub-flow"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="invalid trade" doc:id="7dcef24a-d38f-4568-8bcb-41621157b10d" message="invalid trade"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="set response" doc:id="984eb37e-4235-40fb-85ac-bf1d96f8a2ab" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status": "trade processed successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="end" doc:id="28409a93-c690-46ae-a721-ccb0bd0a0f8a" message="request processed successfully"/>
+	</sub-flow>
+	<sub-flow name="file-write-sub-flow" doc:id="8db1f365-d52a-4458-8071-4af9e2823517" >
+		<file:write doc:name="Write" doc:id="b684111d-0059-4a62-ba4a-d2fd0b54ac22" path='#[vars.filePath ++ vars.fileName ++ (now() as String {format : "yyyy_MM_dd_HH_mm_ss"}) ++ ".json"]' config-ref="File_Config"/>
+	</sub-flow>
+</mule>
