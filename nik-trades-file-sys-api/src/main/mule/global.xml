@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd 
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <http:listener-config name="nik-trades-file-sys-api-httpListenerConfig" basePath="nik-trades-file-sys-api">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="nik-trades-file-sys-api-config" api="resource::292f4f16-1489-49a3-ba03-34c4f802febb:nik-trades-file-sys-api:1.0.0:raml:zip:nik-trades-file-sys-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <file:config name="File_Config" doc:name="File Config" doc:id="25ef9ba4-ae16-4293-b4b1-5271344757f8" />	
 	<configuration-properties doc:name="Configuration properties" doc:id="b578f134-dd83-4d04-85fe-9be35bca2cd9" file="config/${env}.properties" />
 	<configuration doc:name="Configuration" doc:id="bbc65c43-bfa6-4076-a533-ad9764fc2430" defaultErrorHandler-ref="globalError_Handler" />
 	<error-handler name="globalError_Handler" doc:id="06eea9d5-36db-4121-bc52-0ddcf1ca8a14" >
 		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="d89fd3fd-edcb-46e8-b7e8-6a46fda0d07a" >
 			<ee:transform doc:name="set error payload" doc:id="935b3d26-6b06-49e7-97de-ff66a892b6a2" >
 				<ee:message >
-					<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-{
-	message: "error occurred",
-	error:{
-		description: error.description,
-		errorType: error.errorType.asString
-	}
-}]]></ee:set-payload>
+					<ee:set-payload resource="dw/errorPayload.dwl" />
 				</ee:message>
 			</ee:transform>
 		</on-error-propagate>
